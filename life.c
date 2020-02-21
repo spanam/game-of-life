@@ -47,7 +47,7 @@ void readBoardFromFile(int*** boardIn, int rowSize, int columnSize, const char* 
 
 void nextGeneration(int*** sourceBoardIn, int*** destBoardIn, int rowSize, int columnSize) {
 
-	int** sourceBoard = *sourceBoardIn
+	int** sourceBoard = *sourceBoardIn;
 	int** destBoard = *destBoardIn;
 	
 	// check each area, minus the border which will always be 0
@@ -62,7 +62,7 @@ void nextGeneration(int*** sourceBoardIn, int*** destBoardIn, int rowSize, int c
 				}
 			}
 			// do something depending on count and living/dead:
-			if(board1[i][j] == 0) {	
+			if(sourceBoard[i][j] == 0) {	
 				// when dead, become alive if having exactly 3 neighbors
 				if(count == 3) {
 					destBoard[i][j] = 1;
@@ -83,6 +83,22 @@ void nextGeneration(int*** sourceBoardIn, int*** destBoardIn, int rowSize, int c
 
 }
 
+// runs game, starting with sourceBoard, for a chosen amount of generations
+void goForGenerations(int*** sourceBoard, int*** helperBoard, int rowSize, int columnSize, int generations) {
+	int fromSource = 1;
+	for(int i = 0; i < generations; i++) {
+		if(fromSource) {
+			nextGeneration(sourceBoard, helperBoard, rowSize, columnSize);
+		} else {
+			nextGeneration(helperBoard, sourceBoard, rowSize, columnSize);
+		}
+		fromSource = !fromSource;
+	}
+	// TODO: make goForGenerations take in only sourceBoard, and create the helper board itself.
+	//       ensure that, if fromSource = 1 at the end, we copy from helperBoard to sourceBoard, because
+	//	 sourceBoard is the only one that will be given by the user.
+}
+
 int main() {
 	int rowSize = 10;
 	int columnSize = 10;
@@ -94,15 +110,15 @@ int main() {
 	// read board from file
 	readBoardFromFile(&board1, rowSize, columnSize, "./board.txt");
 
-	// start game for 100 generations
-	int generations = 100;
-
 	printf("initial:\n");	
 	printBoard(board1, rowSize, columnSize);
 
+	// start game for 1 generations
+	int generations = 100;
+	goForGenerations(&board1, &board2, rowSize, columnSize, 2);
 
 	printf("after one generation:\n");
-	printBoard(board2, rowSize, columnSize);
+	printBoard(board1, rowSize, columnSize);
 
 	return 0;
 }
