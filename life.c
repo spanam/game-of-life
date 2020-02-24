@@ -1,14 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 // prints out a board
 void printBoard(int** board, int rowSize, int columnSize) {
-	for(int i = 0; i < rowSize; i++) {
-		for(int j = 0; j < columnSize; j++) {
-			printf("%d ", board[i+1][j+1]);
-		}
-		printf("\n");
+	for(int i = 0; i < 2*rowSize + 3; i++) {
+		printf("-");
 	}
+	printf("\n");
+
+	for(int i = 0; i < rowSize; i++) {
+		printf("| ");
+		for(int j = 0; j < columnSize; j++) {
+			if(board[i+1][j+1])
+				printf("0 ");
+			else
+				printf(". "); 
+		}
+		printf("|\n");
+	}
+	
+	for(int i = 0; i < 2*rowSize + 3; i++) {
+		printf("-");
+	}
+	printf("\n");
 }
 
 // generates a board and initializes all elements to 0.
@@ -49,7 +64,6 @@ void nextGeneration(int*** sourceBoardIn, int*** destBoardIn, int rowSize, int c
 
 	int** sourceBoard = *sourceBoardIn;
 	int** destBoard = *destBoardIn;
-	
 	// check each area, minus the border which will always be 0
 	for(int i = 1; i < rowSize+1; i++) {
 		for(int j = 1; j < columnSize+1; j++) {
@@ -84,7 +98,7 @@ void nextGeneration(int*** sourceBoardIn, int*** destBoardIn, int rowSize, int c
 }
 
 // runs game, starting with sourceBoard, for a chosen amount of generations
-void goForGenerations(int*** sourceBoard, int*** helperBoard, int rowSize, int columnSize, int generations) {
+void goForGenerations(int*** sourceBoard, int*** helperBoard, int rowSize, int columnSize, int generations, int waitTime) {
 	int fromSource = 1;
 	for(int i = 0; i < generations; i++) {
 		if(fromSource) {
@@ -93,32 +107,42 @@ void goForGenerations(int*** sourceBoard, int*** helperBoard, int rowSize, int c
 			nextGeneration(helperBoard, sourceBoard, rowSize, columnSize);
 		}
 		fromSource = !fromSource;
+		usleep(500000);
+		printf("Generation %d:\n", i+1);
+		if(fromSource)
+			printBoard(*sourceBoard, rowSize, columnSize);
+		else
+			printBoard(*helperBoard, rowSize, columnSize);
 	}
 	// TODO: make goForGenerations take in only sourceBoard, and create the helper board itself.
 	//       ensure that, if fromSource = 1 at the end, we copy from helperBoard to sourceBoard, because
 	//	 sourceBoard is the only one that will be given by the user.
 }
 
-int main() {
-	int rowSize = 10;
-	int columnSize = 10;
+int main(int argc, char* argv[]) {
+
+	char* board;
+	if(argc == 1) {
+		board = "./boards/board.txt";
+		printf("No board specified. Using default at 'boards/board.txt'.\n");
+	} else {
+		board = argv[1];
+	}
+
+	int rowSize = 25;
+	int columnSize = 25;
 	int** board1, **board2;
 
 	makeBoard(&board1, rowSize, columnSize);
 	makeBoard(&board2, rowSize, columnSize);
 
 	// read board from file
-	readBoardFromFile(&board1, rowSize, columnSize, "./board.txt");
+	readBoardFromFile(&board1, rowSize, columnSize, board);
 
-	printf("initial:\n");	
-	printBoard(board1, rowSize, columnSize);
 
-	// start game for 1 generations
-	int generations = 100;
-	goForGenerations(&board1, &board2, rowSize, columnSize, 2);
+	// start game for 20 generations
+	goForGenerations(&board1, &board2, rowSize, columnSize, 20, 500000);
 
-	printf("after one generation:\n");
-	printBoard(board1, rowSize, columnSize);
 
 	return 0;
 }
